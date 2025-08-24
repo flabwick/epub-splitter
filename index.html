@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPUB Splitter</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Main File List Page -->
+        <div id="file-list-page" class="page active">
+            <header class="app-header">
+                <h1>EPUB Splitter</h1>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn btn-primary">Refresh</button>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div id="file-list-loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Loading EPUB files from server...</p>
+                </div>
+
+                <div id="file-list-container">
+                    <div id="file-list" class="file-grid">
+                        <!-- Files will be populated here -->
+                    </div>
+
+                    <div id="no-files-message" class="no-files hidden">
+                        <div class="no-files-icon">📚</div>
+                        <h3>No EPUB Files Found</h3>
+                        <p>No EPUB files found on the server. Add .epub files to the files/ directory and refresh.</p>
+                    </div>
+                </div>
+
+                <div id="error-section" class="error-section hidden">
+                    <div class="error-header" onclick="toggleErrorSection()">
+                        <h3>⚠️ File Errors (<span id="error-count">0</span>)</h3>
+                        <span id="error-toggle" class="toggle-icon">▼</span>
+                    </div>
+                    <div id="error-list" class="error-list">
+                        <!-- Errors will be populated here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- EPUB Viewer Page -->
+        <div id="epub-viewer-page" class="page">
+            <header class="app-header">
+                <div class="header-nav">
+                    <button id="back-to-list-btn" class="btn btn-back">← Back</button>
+                    <h2 id="epub-title">EPUB Title</h2>
+                </div>
+                <div class="header-actions">
+                    <div class="mode-toggle">
+                        <button id="chapters-mode-btn" class="btn btn-toggle active">Chapters</button>
+                        <button id="chunks-mode-btn" class="btn btn-toggle">Chunks</button>
+                    </div>
+                    <button id="select-all-btn" class="btn btn-secondary">Select All</button>
+                    <button id="deselect-all-btn" class="btn btn-secondary">Deselect All</button>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div id="epub-loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Parsing EPUB structure...</p>
+                </div>
+
+                <div id="epub-info" class="epub-info hidden">
+                    <div class="epub-metadata">
+                        <h3 id="epub-book-title">Book Title</h3>
+                        <p id="epub-author">Author</p>
+                        <p id="epub-chapter-count">0 chapters</p>
+                    </div>
+                </div>
+
+                <!-- Chapters Mode -->
+                <div id="chapters-view" class="view-mode active">
+                    <div id="chapter-list" class="chapter-list">
+                        <!-- Chapters will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Chunks Mode -->
+                <div id="chunks-view" class="view-mode hidden">
+                    <div class="chunks-config">
+                        <div class="config-section">
+                            <label for="chunk-count">Number of chunks:</label>
+                            <input type="number" id="chunk-count" min="2" max="100" value="10" class="chunk-input">
+                            <button id="calculate-chunks-btn" class="btn btn-primary">Calculate</button>
+                        </div>
+                        
+                        <div id="chunk-preview" class="chunk-preview hidden">
+                            <div class="preview-info">
+                                <p>Total words: <span id="total-words">0</span></p>
+                                <p>Target words per chunk: <span id="target-words-per-chunk">0</span> (±10%)</p>
+                                <p>Range: <span id="chunk-word-range">0-0</span> words per chunk</p>
+                            </div>
+                            <button id="split-chunks-btn" class="btn btn-success">Split into Chunks</button>
+                        </div>
+                    </div>
+
+                    <div id="chunk-list" class="chunk-list">
+                        <!-- Chunks will be populated here -->
+                    </div>
+                </div>
+
+                <div id="epub-error" class="error-message hidden">
+                    <h3>❌ Failed to Parse EPUB</h3>
+                    <p id="epub-error-message">Error details will appear here</p>
+                </div>
+            </main>
+
+            <footer class="app-footer">
+                <div class="selection-summary">
+                    <span id="selection-count">0 chapters selected</span>
+                </div>
+                <button id="export-btn" class="btn btn-primary btn-large" disabled>
+                    Export Selected Chapters
+                </button>
+            </footer>
+        </div>
+
+        <!-- Export Page -->
+        <div id="export-page" class="page">
+            <header class="app-header">
+                <div class="header-nav">
+                    <button id="back-to-viewer-btn" class="btn btn-back">← Back</button>
+                    <h2>Export Content</h2>
+                </div>
+                <div class="header-actions">
+                    <button id="copy-to-clipboard-btn" class="btn btn-primary">Copy to Clipboard</button>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div id="export-loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Generating export content...</p>
+                </div>
+
+                <div id="export-info" class="export-info">
+                    <p id="export-summary">Exporting 0 chapters from <span id="export-book-title">Book Title</span></p>
+                </div>
+
+                <div id="export-content" class="export-content">
+                    <!-- Exported content will be populated here -->
+                </div>
+
+                <div id="copy-success" class="copy-success hidden">
+                    ✅ Content copied to clipboard!
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="epub-parser.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -19,7 +19,7 @@ A complete web application with Node.js backend for extracting and exporting sel
 2. **Install dependencies**: `npm install`
 3. **Add EPUB files** to the `files/` directory
 4. **Start the server**: `npm start` or `node server.js`
-5. **Open your browser** to `http://localhost:3000`
+5. **Open your browser** to `http://localhost:4205`
 
 ### Using the Application
 1. **View available EPUBs** - files are automatically loaded from the server
@@ -242,10 +242,10 @@ The server provides the following REST API endpoints:
 3. Install dependencies: `npm install`
 4. Add EPUB files to the `files/` directory
 5. Start the server: `npm start`
-6. Open `http://localhost:3000` in your browser
+6. Open `http://localhost:4205` in your browser
 
 ### Configuration
-- Server runs on port 3000 by default
+- Server runs on port 4205 by default
 - EPUB files are served from the `files/` directory
 - CORS is enabled for frontend-backend communication
 

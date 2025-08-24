@@ -11,7 +11,7 @@ class EPUBSplitterApp {
         this.selectedChunks = new Set();
         this.currentMode = 'chapters'; // 'chapters' or 'chunks'
         this.currentChunks = [];
-        this.apiBaseUrl = 'http://localhost:3000/api';
+        this.apiBaseUrl = 'http://localhost:4205/api';
         
         this.initializeApp();
     }

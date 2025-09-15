@@ -182,12 +182,11 @@ class EPUBParser {
     }
 
     /**
-     * Parse navigation list (EPUB3)
+     * Parse navigation list (EPUB3) - flattened
      */
-    parseNavigationList(ol, parentId = null) {
-        if (!ol) return [];
+    parseNavigationList(ol, parentId = null, items = [], depth = 0) {
+        if (!ol) return items;
 
-        const items = [];
         const listItems = ol.querySelectorAll(':scope > li');
 
         listItems.forEach((li, index) => {
@@ -196,34 +195,32 @@ class EPUBParser {
 
             const href = link.getAttribute('href');
             const title = link.textContent.trim();
-            const id = `nav-${parentId || 'root'}-${index}`;
+            const id = `nav-${parentId || 'root'}-${index}-${depth}`;
 
             const item = {
                 id: id,
                 title: title || 'Untitled',
                 href: href ? href.split('#')[0] : '', // Remove fragment
-                parentId: parentId,
-                children: []
+                parentId: null, // Remove parent relationship
+                children: [] // Keep empty for compatibility
             };
 
-            // Check for nested list
+            items.push(item);
+
+            // Process nested lists but flatten them
             const nestedOl = li.querySelector('ol');
             if (nestedOl) {
-                item.children = this.parseNavigationList(nestedOl, id);
+                this.parseNavigationList(nestedOl, id, items, depth + 1);
             }
-
-            items.push(item);
         });
 
         return items;
     }
 
     /**
-     * Parse NCX navigation points (EPUB2)
+     * Parse NCX navigation points (EPUB2) - flattened
      */
-    parseNCXNavPoints(navPoints, parentId = null) {
-        const items = [];
-
+    parseNCXNavPoints(navPoints, parentId = null, items = [], depth = 0) {
         navPoints.forEach((navPoint, index) => {
             const navLabel = navPoint.querySelector('navLabel text');
             const content = navPoint.querySelector('content');
@@ -232,23 +229,23 @@ class EPUBParser {
 
             const title = navLabel.textContent.trim();
             const href = content.getAttribute('src');
-            const id = `ncx-${parentId || 'root'}-${index}`;
+            const id = `ncx-${parentId || 'root'}-${index}-${depth}`;
 
             const item = {
                 id: id,
                 title: title || 'Untitled',
                 href: href ? href.split('#')[0] : '', // Remove fragment
-                parentId: parentId,
-                children: []
+                parentId: null, // Remove parent relationship
+                children: [] // Keep empty for compatibility
             };
 
-            // Check for nested navPoints
+            items.push(item);
+
+            // Process nested navPoints but flatten them
             const nestedNavPoints = navPoint.querySelectorAll(':scope > navPoint');
             if (nestedNavPoints.length > 0) {
-                item.children = this.parseNCXNavPoints(nestedNavPoints, id);
+                this.parseNCXNavPoints(nestedNavPoints, id, items, depth + 1);
             }
-
-            items.push(item);
         });
 
         return items;
@@ -272,9 +269,9 @@ class EPUBParser {
     }
 
     /**
-     * Extract chapters using navigation structure
+     * Extract chapters using navigation structure - flattened
      */
-    async extractChaptersFromNavigation(zip, manifest, navigation, chapters, parentId = null) {
+    async extractChaptersFromNavigation(zip, manifest, navigation, chapters) {
         const processedFiles = new Set(); // Track processed files to avoid duplicates
         
         for (const navItem of navigation) {
@@ -306,7 +303,7 @@ class EPUBParser {
                     const wordCount = this.countWords(textContent);
                     
                     // Only include chapters with meaningful content
-                    if (wordCount > 10 || navItem.children?.length > 0) {
+                    if (wordCount > 10) {
                         const chapter = {
                             id: navItem.id,
                             title: navItem.title,
@@ -314,18 +311,11 @@ class EPUBParser {
                             textContent: textContent,
                             wordCount: wordCount,
                             spineOrder: this.findSpineOrder(manifest, manifestItem.href),
-                            parentId: parentId,
-                            children: []
+                            parentId: null, // Remove parent relationship
+                            children: [] // Keep empty for compatibility
                         };
 
                         chapters.push(chapter);
-                    }
-
-                    // Process children recursively
-                    if (navItem.children && navItem.children.length > 0) {
-                        await this.extractChaptersFromNavigation(
-                            zip, manifest, navItem.children, chapters, navItem.id
-                        );
                     }
                 }
             } catch (error) {

@@ -230,20 +230,22 @@ class EPUBSplitterApp {
             return;
         }
 
-        // Group chapters by parent (for hierarchical display)
-        const topLevelChapters = this.currentEPUB.chapters.filter(ch => !ch.parentId);
+        // Sort chapters chronologically by spine order
+        const sortedChapters = this.currentEPUB.chapters
+            .slice()
+            .sort((a, b) => a.spineOrder - b.spineOrder);
         
-        topLevelChapters.forEach(chapter => {
-            this.renderChapter(chapter, chapterList, 0);
+        sortedChapters.forEach(chapter => {
+            this.renderChapter(chapter, chapterList);
         });
     }
 
     /**
-     * Render a chapter and its children recursively
+     * Render a chapter in chronological order
      */
-    renderChapter(chapter, container, level) {
+    renderChapter(chapter, container) {
         const chapterElement = document.createElement('div');
-        chapterElement.className = `chapter-item level-${level}`;
+        chapterElement.className = 'chapter-item';
         
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -272,12 +274,6 @@ class EPUBSplitterApp {
         chapterElement.appendChild(label);
         
         container.appendChild(chapterElement);
-
-        // Render children if any
-        const children = this.currentEPUB.chapters.filter(ch => ch.parentId === chapter.id);
-        children.forEach(child => {
-            this.renderChapter(child, container, level + 1);
-        });
     }
 
     /**
